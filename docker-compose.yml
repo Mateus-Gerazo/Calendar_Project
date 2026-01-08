@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: calendar-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: calendar_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - calendar-network
+
+  # Backend API Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: calendar-server
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: calendar_app
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: your-secret-key-change-in-production
+      JWT_EXPIRES_IN: 7d
+      CLIENT_URL: http://localhost:80
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - calendar-network
+    restart: unless-stopped
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: calendar-client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - calendar-network
+    restart: unless-stopped
+
+networks:
+  calendar-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

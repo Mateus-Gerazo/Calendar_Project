@@ -1,0 +1,15 @@
+# Exemplo de arquivo para sobrescrever configurações do docker-compose.yml
+# Copie este arquivo para .docker-compose.override.yml e ajuste conforme necessário
+
+version: '3.8'
+
+services:
+  server:
+    environment:
+      # Sobrescreva variáveis de ambiente aqui
+      JWT_SECRET: your-custom-secret-key
+      DB_PASSWORD: your-custom-password
+
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: your-custom-password
